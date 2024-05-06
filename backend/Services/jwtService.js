@@ -3,18 +3,17 @@ const dotenv = require("dotenv")
 dotenv.config()
 
 const jwtService = {
-    gennerateAccessToken: async (payload) => {
+    generateAccessToken: async (payload) => {
         try {
             const access_token = jwt.sign({
                 payload
-            }, process.env.SECRET_KEY, { expiresIn: '1h' })
-
+            }, process.env.SECRET_KEY, { expiresIn: '1d' })
             return access_token
         } catch (e) {
             console.log(e);
         }
     },
-    gennerateRefreshToken: async (payload) => {
+    generateRefreshToken: async (payload) => {
         try {
             const refresh_token = jwt.sign({
                 payload

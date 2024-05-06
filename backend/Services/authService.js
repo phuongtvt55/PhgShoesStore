@@ -1,83 +1,56 @@
-const User = require("../models/User")
-const bcrypt = require("bcrypt")
-const jwtService = require("./jwtService")
+const User = require("../models/User");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken")
+const jwtService = require("./jwtService");
+const dotenv = require("dotenv")
+dotenv.config()
 
-const register = (newUser) => {
-    return new Promise(async (resolve, reject) => {
-        const { name, email, password } = newUser
-
+const authService = {
+    register: async (newUser) => {
         try {
-            const checkEmail = await User.findOne({ email: email })
-            if (checkEmail !== null) {
-                return reject({
-                    messages: "Email already exist!!!"
-                })
-
-            }
-            const salt = await bcrypt.genSalt(10)
-            const hashPass = await bcrypt.hash(password, salt)
-            const createUser = await User.create({
-                name, email, password: hashPass
-            })
-            if (createUser) {
-                return resolve({
-                    status: "OK",
-                    messages: "Register successfully!",
-                    data: createUser
-                })
-            }
+            const { name, email, password } = newUser;
+            const checkEmail = await User.findOne({ email });
+            if (checkEmail) throw { messages: "Email already exists!!!" };
+            const hashPass = await bcrypt.hash(password, 10);
+            const createUser = await User.create({ name, email, password: hashPass });
+            return { status: "OK", messages: "Register successfully!", data: createUser };
         } catch (e) {
-            return reject(e)
+            throw e;
         }
-    })
-}
+    },
 
-const login = (newUser) => {
-    return new Promise(async (resolve, reject) => {
+    login: async (newUser) => {
         try {
-            const user = await User.findOne({ email: newUser.email })
-            if (!user) {
-                return reject({
-                    messages: "Email is not register!!!"
-                })
-            }
-            const validPass = await bcrypt.compare(newUser.password, user.password)
-            if (!validPass) {
-                return reject({
-                    messages: "Password is incorrect!!!"
-                })
-            }
+            const user = await User.findOne({ email: newUser.email });
+            if (!user) throw { messages: "Email is not registered!!!" };
+            const validPass = await bcrypt.compare(newUser.password, user.password);
+            if (!validPass) throw { messages: "Password is incorrect!!!" };
 
-            const access_token = await jwtService.gennerateAccessToken({
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                isAdmin: user.isAdmin
-            })
-
-            const refresh_token = await jwtService.gennerateRefreshToken({
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                isAdmin: user.isAdmin
-            })
-
-
-            return resolve({
-                "status": "OK",
-                "messages": "Login successfully",
-                "access_token": access_token,
-                "refresh_token": refresh_token
-            })
+            const { id, name, email, isAdmin } = user;
+            const access_token = await jwtService.generateAccessToken({ id, name, email, isAdmin });
+            const refresh_token = await jwtService.generateRefreshToken({ id, name, email, isAdmin });
+            return { status: "OK", messages: "Login successfully", access_token, refresh_token };
         } catch (e) {
-            return reject({
-                "messages": e
-            })
+            throw { messages: e };
         }
-    })
+    },
+    refreshToken: async (token) => {
+        try {
+            let userToken
+            jwt.verify(token, process.env.SECRET_KEY, async (err, user) => {
+                if (err) {
+                    throw { "messages": "Can't read token" }
+                }
+                userToken = user
+            })
+            const { id, name, email, isAdmin } = userToken.payload;
+            const access_token = await jwtService.generateAccessToken({ id, name, email, isAdmin });
+            const refresh_token = await jwtService.generateRefreshToken({ id, name, email, isAdmin });
+            return { status: "OK", messages: "Refresh successfully", access_token, refresh_token };
+        } catch (e) {
+            console.log(e)
+            throw { messages: "An error occurred" }
+        }
+    }
 }
-
-module.exports = {
-    register,
-    login
-}
+module.exports = authService;
