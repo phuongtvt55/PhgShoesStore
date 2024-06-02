@@ -30,8 +30,8 @@ function ListAddress({
       toast.success("Change default address successfully");
       getAddress();
     } catch (e) {
-      toast.errorr("Err");
-      console.log(e);
+      toast.error("Err");
+      console.log("Err", e);
     }
   };
 

@@ -25,7 +25,6 @@ const addressService = {
             const createAddress = await Address.create(userAddress)
             return { status: "OK", messages: "Create successfully!", data: createAddress };
         } catch (e) {
-            console.log(e)
             throw e
         }
     },
@@ -61,10 +60,10 @@ const addressService = {
                     item.default = false
                 }
             })
-            const setDefault = await Address.updateOne(address)
+            const setDefault = await address.save()
             return { status: "OK", messages: "Create successfully!", data: setDefault };
         } catch (e) {
-            //console.log(e)
+            console.log(e)
             throw e
         }
     }

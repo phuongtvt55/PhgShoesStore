@@ -16,8 +16,9 @@ const authController = {
             res.cookie("refresh_token", response.refresh_token, {
                 httpOnly: true,
                 secure: false,
-                samesite: "strict"
-            })
+                samesite: "strict",
+                expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 365 days from now
+            });
             return res.status(200).json(newResponse)
         } catch (err) {
             return res.status(500).json(err)

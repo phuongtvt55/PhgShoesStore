@@ -1,13 +1,13 @@
-import './App.css';
-import { Routes, Route, useNavigate } from 'react-router-dom';
-import { routes } from './routes';
-import Default from './components/DefaultLayout';
+import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { getUserById } from './rest/api/user';
+import { Route, Routes, useNavigate } from 'react-router-dom';
+import './App.css';
+import Default from './components/DefaultLayout';
 import { updateUser } from './redux/slice/userSlice';
-import { useEffect, useState } from 'react';
-import { checkExp, decodeJwt } from './untils/jwtDecode';
 import { refresh } from './rest/api/auth';
+import { getUserById } from './rest/api/user';
+import { routes } from './routes';
+import { checkExp, decodeJwt } from './untils/jwtDecode';
 
 
 function App() {
@@ -19,7 +19,7 @@ function App() {
     if (token) {
       const checkToken = checkExp(token)
       if (!checkToken) {
-        //handleRefresh()
+        handleRefresh()
         localStorage.clear("access_token")
         navigate("/login")
       } else {
