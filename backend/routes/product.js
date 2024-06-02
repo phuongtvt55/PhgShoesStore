@@ -7,5 +7,6 @@ router.get('/:id', productController.getById)
 router.post('/', authMiddleware.checkAdmin, productController.createProduct)
 router.patch('/:id', productController.updateProduct)
 router.delete('/:id', authMiddleware.checkAdmin, productController.deleteProduct)
+router.post('/getDiscount', productController.getDiscountProducts)
 
 module.exports = router

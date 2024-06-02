@@ -12,7 +12,8 @@ const userController = {
     getById: async (req, res) => {
         try {
             const response = await userService.getById(req.params.id)
-            res.status(200).json(response)
+            const { password, ...newResponse } = response._doc
+            res.status(200).json(newResponse)
         } catch (err) {
             res.status(500).json(err)
         }
@@ -28,6 +29,30 @@ const userController = {
     deleteUser: async (req, res) => {
         try {
             const response = await userService.delteUser(req.params.id)
+            res.status(200).json(response)
+        } catch (err) {
+            res.status(500).json(err)
+        }
+    },
+    getWishList: async (req, res) => {
+        try {
+            const response = await userService.getWishList(req.headers.token.split(" ")[1])
+            res.status(200).json(response)
+        } catch (err) {
+            res.status(500).json(err)
+        }
+    },
+    addWishList: async (req, res) => {
+        try {
+            const response = await userService.addWishList(req.headers.token.split(" ")[1], req.body.id)
+            res.status(200).json(response)
+        } catch (err) {
+            res.status(500).json(err)
+        }
+    },
+    removeWishList: async (req, res) => {
+        try {
+            const response = await userService.removeWishList(req.headers.token.split(" ")[1], req.body.id)
             res.status(200).json(response)
         } catch (err) {
             res.status(500).json(err)

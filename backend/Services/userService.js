@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const { parseJwt } = require("../untils")
 
 const userService = {
     getAll: async () => {
@@ -12,6 +13,7 @@ const userService = {
         try {
             const user = await User.findById(id);
             if (!user) throw { messages: "Not found user" };
+
             return user;
         } catch (e) {
             throw { messages: e };
@@ -33,6 +35,44 @@ const userService = {
             return { messages: "Delete successfully" };
         } catch (e) {
             throw { messages: e };
+        }
+    },
+    getWishList: async (token) =>{
+        try{
+            const userToken = parseJwt(token)
+            const user = await User.findById(userToken.payload.id)
+            if(!user) throw {messages: "Not found user"}
+            return user.wishList
+        }catch(e){
+            throw {messages: e}
+        }
+    },
+    addWishList: async (token, id) => {
+        try {
+            const userToken = parseJwt(token)
+            const user = await User.findById(userToken.payload.id)
+            if (!user) {
+                throw { messages: "Not found user" }
+            }
+            user.wishList = [id, ...user.wishList]
+            const update = await User.findByIdAndUpdate(userToken.payload.id, user, { new: true })
+            return { statsus: "Ok", messages: "Add wishList successfully", update: update }
+        } catch (e) {
+            console.log(e)
+            throw { messages: e }
+        }
+    },
+    removeWishList: async (token, id) => {
+        try {
+            const userToken = parseJwt(token)
+            const user = await User.findById(userToken.payload.id)
+            if (!user) {
+                throw { messages: "Not found user" }
+            }
+            const update = await User.updateOne({ email: userToken.payload.email }, { $pull: { wishList: id } }, { new: true })
+            return { statsus: "Ok", messages: "Remove wishList successfully", update: update }
+        } catch (e) {
+            throw { messages: e }
         }
     }
 };

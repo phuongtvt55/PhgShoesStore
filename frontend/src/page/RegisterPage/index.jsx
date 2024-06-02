@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -8,6 +8,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useMutationHook } from "../../hooks/useMutationHook";
+import { register } from "../../rest/api/auth";
+import { toast } from "react-toastify";
 
 const fields = [
   { id: "email", label: "Email", type: "email" },
@@ -67,10 +70,23 @@ function Register() {
 
   const handleSignUp = () => {
     setErrors({});
-    console.log("Sign Up successful");
-    console.log(inputs);
+    mutation.mutate(inputs);
   };
 
+  const mutation = useMutationHook(async (data) => await register(data));
+
+  const { data, error, isSuccess, isError } = mutation;
+  useEffect(() => {
+    if (isSuccess) {
+      toast("Register successfully");
+      navigateToLogin();
+    }
+    if (isError) {
+      toast(error.response.data.messages);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isError, isSuccess]);
+  console.log(mutation);
   const navigateToLogin = () => {
     navigate("/login");
   };
@@ -142,6 +158,7 @@ function Register() {
               defaultValue=""
               helperText={errors[field.id] ? errors[field.id] : ""}
               color="success"
+              autoComplete=""
             />
           ))}
           <Button

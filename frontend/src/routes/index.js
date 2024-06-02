@@ -1,9 +1,11 @@
+import AdminPage from "../page/AdminPage";
 import Detail from "../page/DetailPage";
 import HomePage from "../page/HomePage";
 import Login from "../page/LoginPage";
 import NotFound from "../page/NotFoundPage";
 import Order from "../page/OrderPage";
 import Product from "../page/ProductPage";
+import Profile from "../page/ProfilePage";
 import Register from "../page/RegisterPage";
 
 export const routes = [
@@ -37,7 +39,17 @@ export const routes = [
         page: Register,
         isShowHeader: false
     },
-
+    {
+        path: '/profile',
+        page: Profile,
+        isShowHeader: true
+    },
+    {
+        path: '/admin',
+        page: AdminPage,
+        isShowHeader: false,
+        isPrivate: true,
+    },
     {
         path: '*',
         page: NotFound,

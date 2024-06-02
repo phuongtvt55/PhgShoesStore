@@ -1,22 +1,26 @@
-import React, { Fragment, useState } from "react";
-import { styled, alpha } from "@mui/material/styles";
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
-import InputBase from "@mui/material/InputBase";
-import Badge from "@mui/material/Badge";
-import MenuItem from "@mui/material/MenuItem";
-import Menu from "@mui/material/Menu";
-import SearchIcon from "@mui/icons-material/Search";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import MailIcon from "@mui/icons-material/Mail";
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import MoreIcon from "@mui/icons-material/MoreVert";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import SearchIcon from "@mui/icons-material/Search";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { Avatar, Button, Tooltip } from "@mui/material";
+import AppBar from "@mui/material/AppBar";
+import Badge from "@mui/material/Badge";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import InputBase from "@mui/material/InputBase";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import { alpha, styled } from "@mui/material/styles";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import { clearUser } from "../../redux/slice/userSlice";
+import { searchProduct } from "../../redux/slice/productSlice";
+import { logout } from "../../rest/api/auth";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -63,11 +67,13 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 const Header = () => {
+  const dispatch = useDispatch();
+  const [search, setSearch] = useState();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
-  const [isLogin, setIsLogin] = useState(false);
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
+  const orderCart = useSelector((state) => state.order.orderItems);
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -82,9 +88,26 @@ const Header = () => {
     handleMobileMenuClose();
   };
 
+  const navigateProfile = () => {
+    handleMenuClose();
+    navigate("/profile");
+  };
+
+  const navigateOrder = () => {
+    navigate("/order");
+  };
+  const hanldeLogout = async () => {
+    dispatch(clearUser());
+    localStorage.clear("access_token");
+    await logout();
+    navigate("/login");
+  };
+
   const handleMobileMenuOpen = (event) => {
     setMobileMoreAnchorEl(event.currentTarget);
   };
+
+  const user = useSelector((state) => state.user);
 
   const menuId = "primary-search-account-menu";
   const renderMenu = (
@@ -103,9 +126,8 @@ const Header = () => {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
-      <MenuItem onClick={handleMenuClose}>LogOut</MenuItem>
+      <MenuItem onClick={navigateProfile}>Profile</MenuItem>
+      <MenuItem onClick={hanldeLogout}>LogOut</MenuItem>
     </Menu>
   );
 
@@ -126,15 +148,16 @@ const Header = () => {
       open={isMobileMenuOpen}
       onClose={handleMobileMenuClose}
     >
-      {isLogin ? (
+      {user.name ? (
         <Box>
           <MenuItem>
             <IconButton
               size="large"
               aria-label="show 17 new notifications"
               color="inherit"
+              onClick={navigateOrder}
             >
-              <Badge badgeContent={17} color="error">
+              <Badge badgeContent={orderCart?.length} color="error">
                 <ShoppingCartIcon />
               </Badge>
             </IconButton>
@@ -198,9 +221,18 @@ const Header = () => {
     navigate("/");
   };
 
+  const handleSearch = (text) => {
+    setSearch(text);
+    dispatch(searchProduct(text));
+  };
+
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="fixed" color="inherit">
+      <AppBar
+        position="fixed"
+        color="inherit"
+        sx={{ background: "transparent", backdropFilter: "blur(15px)" }}
+      >
         <Toolbar>
           <Box
             sx={{
@@ -226,17 +258,19 @@ const Header = () => {
               <StyledInputBase
                 placeholder="Search…"
                 inputProps={{ "aria-label": "search" }}
+                onChange={(e) => handleSearch(e.target.value)}
               />
             </Search>
             <Box sx={{ display: { xs: "none", md: "flex" } }}>
-              {isLogin ? (
+              {user.name ? (
                 <>
                   <IconButton
                     size="large"
                     aria-label="show new order"
                     color="inherit"
+                    onClick={navigateOrder}
                   >
-                    <Badge badgeContent={17} color="error">
+                    <Badge badgeContent={orderCart?.length} color="error">
                       <ShoppingCartIcon />
                     </Badge>
                   </IconButton>
@@ -258,16 +292,19 @@ const Header = () => {
                       <NotificationsIcon />
                     </Badge>
                   </IconButton>
-                  <Tooltip title="Open settings">
-                    <IconButton
-                      onClick={handleProfileMenuOpen}
-                      sx={{ p: 0, ml: 2 }}
-                    >
-                      <Avatar
-                        alt="Remy Sharp"
-                        src="/static/images/avatar/2.jpg"
-                      />
-                    </IconButton>
+                  <Tooltip
+                    sx={{
+                      textAlign: "center",
+                      alignItems: "center",
+                      display: "flex",
+                      cursor: "pointer",
+                      marginLeft: "10px",
+                    }}
+                    title="Open settings"
+                  >
+                    <Typography onClick={handleProfileMenuOpen}>
+                      {user.name}
+                    </Typography>
                   </Tooltip>
                 </>
               ) : (

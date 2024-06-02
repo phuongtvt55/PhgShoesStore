@@ -40,6 +40,14 @@ const productController = {
         } catch (err) {
             res.status(500).json(err)
         }
+    },
+    getDiscountProducts: async (req, res) => {
+        try {
+            const response = await productService.getDiscountProducts(req.body.ids)
+            res.status(200).json(response)
+        } catch (err) {
+            res.status(500).json(err)
+        }
     }
 }
 

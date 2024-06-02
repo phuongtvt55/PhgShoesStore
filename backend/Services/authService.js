@@ -22,10 +22,9 @@ const authService = {
     login: async (newUser) => {
         try {
             const user = await User.findOne({ email: newUser.email });
-            if (!user) throw { messages: "Email is not registered!!!" };
+            if (!user) throw ("Email is not registered!!!");
             const validPass = await bcrypt.compare(newUser.password, user.password);
-            if (!validPass) throw { messages: "Password is incorrect!!!" };
-
+            if (!validPass) throw ("Password is incorrect!!!");
             const { id, name, email, isAdmin } = user;
             const access_token = await jwtService.generateAccessToken({ id, name, email, isAdmin });
             const refresh_token = await jwtService.generateRefreshToken({ id, name, email, isAdmin });
@@ -45,10 +44,9 @@ const authService = {
             })
             const { id, name, email, isAdmin } = userToken.payload;
             const access_token = await jwtService.generateAccessToken({ id, name, email, isAdmin });
-            const refresh_token = await jwtService.generateRefreshToken({ id, name, email, isAdmin });
+            //const refresh_token = await jwtService.generateRefreshToken({ id, name, email, isAdmin });
             return { status: "OK", messages: "Refresh successfully", access_token, refresh_token };
         } catch (e) {
-            console.log(e)
             throw { messages: "An error occurred" }
         }
     }

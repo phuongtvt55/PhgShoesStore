@@ -2,18 +2,26 @@ import {
   Box,
   Button,
   Divider,
-  Link,
   Paper,
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { login } from "../../rest/api/auth";
+import { useMutationHook } from "../../hooks/useMutationHook";
+import { toast } from "react-toastify";
+import { getUserById } from "../../rest/api/user";
+import { useDispatch } from "react-redux";
+import { updateUser } from "../../redux/slice/userSlice";
+import { decodeJwt } from "../../untils/jwtDecode";
 
 function Login() {
+  const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [inputs, setInputs] = useState({ email: "", password: "" });
-  const [error, setError] = useState({});
+  const [errorMess, setError] = useState({});
 
   const hanldeOnchange = (text, input) => {
     setInputs((prevState) => ({ ...prevState, [input]: text }));
@@ -37,15 +45,43 @@ function Login() {
     if (valid) handleLogin();
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setError({});
-    console.log("Login succes");
-    console.log(inputs);
+    mutation.mutate(inputs);
+  };
+
+  const mutation = useMutationHook(async (data) => await login(data));
+  const { data, error, isSuccess, isError } = mutation;
+
+  useEffect(() => {
+    if (isSuccess) {
+      localStorage.setItem("access_token", data?.data.access_token);
+      const decode = decodeJwt(data?.data.access_token);
+      getUser(decode?.payload.id, data?.data.access_token);
+      if (location.state) navigate(location?.state);
+      else navigateHome();
+    }
+    if (isError) {
+      toast.dismiss();
+      error?.response &&
+        toast.error(error?.response.data.messages, {
+          position: "bottom-center",
+          closeOnClick: true,
+          autoClose: 2000,
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSuccess, isError]);
+
+  const getUser = async (id, access_token) => {
+    const res = await getUserById(id);
+    dispatch(updateUser({ ...res.data, access_token }));
   };
 
   const navigateToRegister = () => {
     navigate("/register");
   };
+
   const navigateHome = () => {
     navigate("/");
   };
@@ -103,13 +139,13 @@ function Login() {
                 borderRadius: 20,
               },
             }}
-            error={error.email ? true : false}
+            error={errorMess.email}
             fullWidth={true}
             type="email"
             id="email"
             label="Email"
             defaultValue=""
-            helperText={error.email ? error.email : ""}
+            helperText={errorMess.email ? errorMess.email : ""}
             color="success"
           />
           <TextField
@@ -120,13 +156,13 @@ function Login() {
                 borderRadius: 20,
               },
             }}
-            error={error.password ? true : false}
+            error={errorMess.password}
             fullWidth={true}
             id="pass"
             label="Password"
             type="password"
             defaultValue=""
-            helperText={error.password ? error.password : ""}
+            helperText={errorMess.password ? errorMess.password : ""}
             color="success"
             autoComplete="true"
           />

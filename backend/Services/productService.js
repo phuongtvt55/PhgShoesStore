@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose")
 const Product = require("../models/Product")
 
 const productService = {
@@ -5,7 +6,7 @@ const productService = {
         try {
             const product = await Product.find()
             if (!product) {
-                throw { messages: "Can't get products" }
+                throw ("Can't get products")
             }
             return { product }
         } catch (e) {
@@ -54,10 +55,24 @@ const productService = {
         try {
             const prodcut = await Product.findById(id)
             if (!prodcut) throw { messages: "Can't find product" }
-
             const deleteProduct = await Product.findByIdAndDelete(id)
             return { messages: "Delete successfully" }
         } catch (e) {
+            throw { messages: e }
+        }
+    },
+    getDiscountProducts: async (proIds) => {
+        try {
+            const ids = proIds.map((id) => new mongoose.Types.ObjectId(id))
+            const products = await Product.find({ _id: { $in: ids } })
+            const discountedProducts = products.map(product => ({
+                name: product.name,
+                discountedPrice: product.price - (product.price * (product.discount / 100))
+            }));
+
+            return discountedProducts;
+        } catch (e) {
+            console.log(e)
             throw { messages: e }
         }
     }

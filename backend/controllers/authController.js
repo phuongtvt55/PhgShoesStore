@@ -12,15 +12,31 @@ const authController = {
     loginUser: async (req, res) => {
         try {
             const response = await authService.login(req.body)
-            return res.status(200).json(response)
+            const { refresh_token, ...newResponse } = response
+            res.cookie("refresh_token", response.refresh_token, {
+                httpOnly: true,
+                secure: false,
+                samesite: "strict"
+            })
+            return res.status(200).json(newResponse)
+        } catch (err) {
+            return res.status(500).json(err)
+        }
+    },
+    logout: async (req, res) => {
+        try {
+            res.clearCookie("refresh_token")
+            return res.status(200).json({
+                "messages": "Logout successfully"
+            })
         } catch (err) {
             return res.status(500).json(err)
         }
     },
     refreshToken: async (req, res) => {
         try {
-            const response = await authService.refreshToken(req.headers.token?.split(" ")[1])
-            console.log(response)
+            //console.log(res.cookies)
+            const response = await authService.refreshToken(req.cookies?.refresh_token)
             return res.status(200).json(response)
         } catch (err) {
             return res.status(500).json(err)
